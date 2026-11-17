@@ -67,3 +67,8 @@ def test_list_add_and_order(client):
     client.post(f"/item/{i.pk}/toggle")
     i.refresh_from_db()
     assert not i.ordered and i.ordered_by is None
+
+
+def test_favicon(client):
+    r = client.get("/favicon.svg")
+    assert r.status_code == 200 and r["Content-Type"] == "image/svg+xml"
