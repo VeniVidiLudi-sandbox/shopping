@@ -1,18 +1,61 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Shopping</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&display=swap" rel="stylesheet">
 <style>
-:root{--fg:#1d1d1f;--bg:#fafafa;--muted:#6b6b70;--line:#dcdce0;--accent:#3451b2;--warn:#fff4ce}
-@media (prefers-color-scheme:dark){:root{--fg:#ececf0;--bg:#16161a;--muted:#9b9ba3;--line:#34343a;--accent:#8fa6ff;--warn:#4a3b00}}
-body{font:16px/1.5 system-ui,sans-serif;color:var(--fg);background:var(--bg);max-width:44rem;margin:0 auto;padding:1rem}
-a{color:var(--accent)} .muted{color:var(--muted)} .banner{background:var(--warn);padding:.4rem .75rem;border-radius:6px}
+:root{--fg:#2b2a33;--muted:#6f6a63}
+*{box-sizing:border-box}
+body{font:16px/1.5 system-ui,sans-serif;color:var(--fg);background:#f6efe2;
+ background-image:radial-gradient(#e9dcc3 1px,transparent 1px);background-size:18px 18px;
+ max-width:34rem;margin:0 auto;padding:1rem 1rem 3rem}
+.hand{font-family:Caveat,"Segoe Print","Bradley Hand","Comic Sans MS",cursive}
+a{color:#3451b2} .muted{color:var(--muted);font-size:.85rem}
+.banner{background:#fff4ce;padding:.3rem .75rem;border-radius:6px;font-size:.85rem}
+h1{font-size:2.6rem;margin:.2rem 0;transform:rotate(-1.5deg)}
+form.add{display:flex;gap:.5rem;margin:1rem 0 1.5rem}
+form.add input{flex:1;min-width:0;font:inherit;font-size:1.5rem;padding:.4rem .7rem;border:2px dashed #b9a88a;border-radius:8px;background:#fffdf7}
+button{font:inherit;cursor:pointer}
+form.add button{font-size:1.5rem;padding:.3rem 1rem;border:0;border-radius:8px;background:#ff7a59;color:#fff;font-weight:700;min-height:48px}
+ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:1.1rem}
+@media (max-width:360px){ul{grid-template-columns:1fr}}
+li{position:relative;padding:.9rem .8rem .6rem;min-height:8rem;box-shadow:2px 4px 8px rgba(0,0,0,.18);display:flex;flex-direction:column;justify-content:space-between;transition:opacity .2s}
+li:nth-child(odd){margin-top:.3rem}
+li.yellow{background:#fff176}li.pink{background:#ff9ec4}li.blue{background:#8fd3ff}li.green{background:#a5e887}li.orange{background:#ffbf69}
+li::before{content:"";position:absolute;top:-8px;left:50%;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ff6b6b,#b22);box-shadow:1px 2px 3px rgba(0,0,0,.4)}
+.text{font-size:1.7rem;line-height:1.1;font-weight:700;word-break:break-word}
+.meta{font-size:.78rem;color:#4a463e;margin:.4rem 0}
+li button{align-self:flex-end;min-height:44px;min-width:44px;padding:.3rem .8rem;border:2px solid rgba(0,0,0,.35);border-radius:22px;background:rgba(255,255,255,.55);font-size:.95rem}
+li.done{opacity:.55;filter:saturate(.5)} li.done .text{text-decoration:line-through}
+h2{font-size:1.6rem;margin:2rem 0 1rem}
+.empty{font-size:1.5rem;text-align:center;margin:2rem 0}
+.who{display:flex;justify-content:space-between;align-items:center;margin-top:2rem}
+.who button{background:none;border:0;color:#3451b2;text-decoration:underline;font-size:.85rem}
 </style></head><body>
 {% if app_env == "dev" %}<p class="banner">Dev copy</p>{% endif %}
-<h1>Shopping</h1>
-<p>{{ app_description }}</p>
+<h1 class="hand">🛒 Shopping</h1>
 {% if user.is_authenticated %}
-<p>Signed in as <strong>{{ user.username }}</strong>{% if user.is_superuser %} (admin: <a href="/admin/">admin pages</a>){% endif %}.</p>
-<form method="post" action="{% url 'oidc_logout' %}">{% csrf_token %}<button>Sign out</button></form>
-{% else %}<p><a href="{% url 'oidc_authentication_init' %}">Sign in</a></p>{% endif %}
-<p class="muted">Version {{ app_version }}{% if last_heartbeat %} · last heartbeat {{ last_heartbeat.at|date:"Y-m-d H:i" }} UTC{% endif %}</p>
+<form class="add" method="post" action="{% url 'add_item' %}">{% csrf_token %}
+ <input class="hand" name="text" maxlength="120" placeholder="Milk x2…" autocomplete="off" required aria-label="New item">
+ <button class="hand">Add</button>
+</form>
+{% regroup items by ordered as groups %}
+{% for g in groups %}
+ {% if g.grouper %}<h2 class="hand">✔ Ordered</h2>{% endif %}
+ <ul>{% for i in g.list %}
+  <li class="{{ i.colour }}{% if i.ordered %} done{% endif %}" style="transform:rotate({{ i.tilt }}deg)">
+   <div class="text hand">{{ i.text }}</div>
+   <div class="meta">{{ i.adder_name }} · {{ i.added_at|timesince }} ago{% if i.ordered %}<br>ordered by {{ i.ordered_by.first_name|default:i.ordered_by.username }}{% endif %}</div>
+   <form method="post" action="{% url 'toggle_item' i.pk %}">{% csrf_token %}
+    <button class="hand">{% if i.ordered %}↩ Undo{% else %}✓ Ordered{% endif %}</button></form>
+  </li>{% endfor %}
+ </ul>
+{% empty %}<p class="empty hand">Nothing needed – the fridge is full! 🎉</p>{% endfor %}
+<div class="who"><span class="muted">{{ user.first_name|default:user.username }}{% if user.is_superuser %} · <a href="/admin/">admin</a>{% endif %}</span>
+<form method="post" action="{% url 'oidc_logout' %}">{% csrf_token %}<button>Sign out</button></form></div>
+{% else %}
+<p class="hand" style="font-size:1.6rem">{{ app_description }}</p>
+<p><a class="hand" style="font-size:1.8rem" href="{% url 'oidc_authentication_init' %}">Sign in</a></p>
+{% endif %}
+<p class="muted">Version {{ app_version }}</p>
 </body></html>

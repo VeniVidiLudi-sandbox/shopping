@@ -1,7 +1,15 @@
 # Shopping
 
-(The worker fills this in from the brief: what the app is for, who uses it, its core features.
-The brief's first line is in `app/description.txt`, which the home page shows.)
+A simple shared shopping list for one family, used mostly on phones (mobile-first). Everyone adds
+what's needed; whoever does the ordering marks items as ordered.
+
+- Shared list of "post-it" items (colourful, slightly rotated, handwritten font) on `/`.
+- Any signed-in user adds an item (short text); each shows who added it and how long ago.
+- "Ordered" button ticks an item: it fades, is struck through, and moves below the outstanding
+  items; "Undo" reverses a mis-tap. Model: `app.models.Item`; views in `app/views.py`.
+- Identity: the platform's OIDC login (platform rule: no app passwords), so family members are
+  accounts in the login service rather than created in Django admin. Signed-out visitors see only a sign-in link.
+- `manage.py seed` adds a few sample items in dev.
 
 ## How this repo works
 - Django 5.2 + Postgres, started from the platform's Django template. The platform's rules are in
@@ -14,4 +22,6 @@ The brief's first line is in `app/description.txt`, which the home page shows.)
 - Migrations must also work with the previous release's code (add now, remove later).
 
 ## Next steps
-(The worker keeps this list for the owner.)
+- Check the look on a real phone; tweak colours/tilt/fonts (Caveat loads from Google Fonts, falls back to cursive).
+- Possible additions: edit/delete an item, "clear ordered" after delivery, quantities, live refresh.
+- Ensure each family member has an account in the login service.

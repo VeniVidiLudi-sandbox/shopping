@@ -46,3 +46,24 @@ def test_the_description_is_escaped(client, tmp_path, monkeypatch):
     monkeypatch.setattr(context, "_DESCRIPTION", d)
     body = client.get("/").content.decode()
     assert "&lt;script&gt;" in body and "<script>alert" not in body and "{{ evil }}" in body
+
+
+@pytest.mark.django_db
+def test_list_add_and_order(client):
+    from app.models import Item
+    u = get_user_model().objects.create_user(username="mum", first_name="Mum")
+    assert client.post("/add", {"text": "Milk x2"}).status_code == 302
+    assert Item.objects.count() == 0  # anonymous can't add
+    client.force_login(u)
+    client.post("/add", {"text": "Milk x2"})
+    client.post("/add", {"text": "  "})
+    i = Item.objects.get()
+    assert i.added_by == u
+    body = client.get("/").content.decode()
+    assert "Milk x2" in body and "Mum" in body
+    client.post(f"/item/{i.pk}/toggle")
+    i.refresh_from_db()
+    assert i.ordered and i.ordered_by == u
+    client.post(f"/item/{i.pk}/toggle")
+    i.refresh_from_db()
+    assert not i.ordered and i.ordered_by is None
