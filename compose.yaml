@@ -1,0 +1,4 @@
+# The platform renders the file it runs from this plus platform.yaml.
+services:
+  web:
+    build: .

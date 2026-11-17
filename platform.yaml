@@ -1,0 +1,18 @@
+# The platform's rules for this project (platform-infra docs/plan.md §5).
+# Checked strictly: see /etc/claude-code/CLAUDE.md in the worker.
+name: shopping
+http:
+  service: web
+  port: 8000
+  health: /health
+resources:
+  prod: { memory: 256m }
+  dev: { memory: 384m }
+needs:
+  postgres: true
+auth: oidc
+commands:
+  migrate: ["python", "manage.py", "migrate", "--noinput"]
+  seed: ["python", "manage.py", "seed"]
+jobs:
+  heartbeat: { schedule: "0 * * * *", service: web, command: ["python", "manage.py", "heartbeat"] }

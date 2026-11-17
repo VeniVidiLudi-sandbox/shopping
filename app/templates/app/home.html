@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shopping</title>
+<style>
+:root{--fg:#1d1d1f;--bg:#fafafa;--muted:#6b6b70;--line:#dcdce0;--accent:#3451b2;--warn:#fff4ce}
+@media (prefers-color-scheme:dark){:root{--fg:#ececf0;--bg:#16161a;--muted:#9b9ba3;--line:#34343a;--accent:#8fa6ff;--warn:#4a3b00}}
+body{font:16px/1.5 system-ui,sans-serif;color:var(--fg);background:var(--bg);max-width:44rem;margin:0 auto;padding:1rem}
+a{color:var(--accent)} .muted{color:var(--muted)} .banner{background:var(--warn);padding:.4rem .75rem;border-radius:6px}
+</style></head><body>
+{% if app_env == "dev" %}<p class="banner">Dev copy</p>{% endif %}
+<h1>Shopping</h1>
+<p>{{ app_description }}</p>
+{% if user.is_authenticated %}
+<p>Signed in as <strong>{{ user.username }}</strong>{% if user.is_superuser %} (admin: <a href="/admin/">admin pages</a>){% endif %}.</p>
+<form method="post" action="{% url 'oidc_logout' %}">{% csrf_token %}<button>Sign out</button></form>
+{% else %}<p><a href="{% url 'oidc_authentication_init' %}">Sign in</a></p>{% endif %}
+<p class="muted">Version {{ app_version }}{% if last_heartbeat %} · last heartbeat {{ last_heartbeat.at|date:"Y-m-d H:i" }} UTC{% endif %}</p>
+</body></html>
